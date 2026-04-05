@@ -1,0 +1,79 @@
+---
+apiVersion: controlplane.cluster.x-k8s.io/v1alpha3
+kind: TalosControlPlane
+metadata:
+  name: talos-controlplane
+  namespace: {{ .Values.cluster.name }}
+  labels:
+    {{- include "cluster-chart.labels" . | nindent 4 }}
+spec:
+  version: {{ .Values.cluster.kubernetes_version }}
+  replicas: {{ .Values.controlplane.machine_count }}
+  infrastructureTemplate:
+    kind: ProxmoxMachineTemplate
+    apiVersion: infrastructure.cluster.x-k8s.io/v1alpha1
+    name: {{ .Values.cluster.name }}-{{ .Values.controlplane.machine_template_suffix }}
+    namespace: {{ .Values.cluster.name }}
+  controlPlaneConfig:
+    controlplane:
+      generateType: controlplane
+      talosVersion: {{ .Values.cluster.talos_version }}
+      strategicPatches:
+        - |
+          machine:
+            network:
+              interfaces:
+                - deviceSelector:
+                    physical: true
+                  vip:
+                    ip: {{ .Values.controlplane.endpoint_ip }}
+            install:
+              disk: {{ .Values.machine.installDisk }}
+              image: {{ .Values.cluster.image }}
+              wipe: true
+            {{- if eq .Values.storage "in-cluster" }}
+            kernel:
+              modules:
+                - name: drbd
+                  parameters:
+                    - usermode_helper=disabled
+                - name: drbd_transport_tcp
+            {{- end }}
+            kubelet:
+              extraArgs:
+                rotate-server-certificates: true
+                cloud-provider: external
+            features:
+              kubernetesTalosAPIAccess:
+                enabled: true
+                allowedRoles:
+                  - os:reader
+                allowedKubernetesNamespaces:
+                  - kube-system
+            sysctls:
+              vm.max_map_count: 1048576
+            {{- if .Values.registries.enabled }}
+            registries:
+              mirrors:
+            {{- toYaml .Values.registries.mirrors | nindent 16 }}
+            {{- end }}
+          cluster:
+            {{- if .Values.network.certSANs }}
+            apiServer:
+              certSANs:
+              {{- toYaml .Values.network.certSANs | nindent 16 }}
+            {{- end }}
+            {{- if .Values.cluster.controlplaneScheduling }}
+            allowSchedulingOnControlPlanes: true
+            {{- end }}
+            {{- if eq .Values.cni "cilium" }}
+            network:
+              cni:
+                name: none
+            proxy:
+              disabled: true
+            {{- end }}
+            externalCloudProvider:
+              enabled: true
+              manifests:
+              {{- toYaml .Values.controlplane.cloudProviderManifests | nindent 16 }}

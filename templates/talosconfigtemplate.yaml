@@ -1,0 +1,48 @@
+---
+apiVersion: bootstrap.cluster.x-k8s.io/v1alpha3
+kind: TalosConfigTemplate
+metadata:
+  name: talosconfig-worker
+  namespace: {{ .Values.cluster.name }}
+  labels:
+    cluster-name: {{ .Values.cluster.name }}
+    {{- include "cluster-chart.labels" . | nindent 4 }}
+spec:
+  template:
+    spec:
+      generateType: worker
+      talosVersion: {{ .Values.cluster.talos_version }}
+      strategicPatches:
+        - |
+          machine:
+            install:
+              disk: {{ .Values.machine.installDisk }}
+              image: {{ .Values.cluster.image }}
+              wipe: true
+            {{- if eq .Values.storage "in-cluster" }}
+            kernel:
+              modules:
+                - name: drbd
+                  parameters:
+                    - usermode_helper=disabled
+                - name: drbd_transport_tcp
+            {{- end }}
+            kubelet:
+              extraArgs:
+                rotate-server-certificates: true
+                cloud-provider: external
+            sysctls:
+              vm.max_map_count: 1048576
+            {{- if .Values.registries.enabled }}
+            registries:
+              mirrors:
+            {{- toYaml .Values.registries.mirrors | nindent 16 }}
+            {{- end }}
+          {{- if eq .Values.cni "cilium" }}
+          cluster:
+            network:
+              cni:
+                name: none
+            proxy:
+              disabled: true
+          {{- end }}
