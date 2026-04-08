@@ -77,3 +77,19 @@ spec:
               enabled: true
               manifests:
               {{- toYaml .Values.controlplane.cloudProviderManifests | nindent 16 }}
+        {{- if .Values.extraManifests }}
+        - |
+          cluster:
+            extraManifests:
+            {{- toYaml .Values.extraManifests | nindent 14 }}
+        {{- end }}
+        {{- if .Values.inlineManifests }}
+        - |
+          cluster:
+            inlineManifests:
+            {{- range .Values.inlineManifests }}
+            - name: {{ .name }}
+              contents: |
+                {{- .contents | nindent 16 }}
+            {{- end }}
+        {{- end }}
