@@ -142,3 +142,24 @@ registries:
   #     overridePath: true
   enabled: false
   mirrors: {}
+
+# URL-based manifests fetched by Talos during cluster bootstrap.
+# Applied via cluster.extraManifests in the Talos machine config.
+# Not used by gitopsapi — gitopsapi uses inlineManifests instead.
+# Direct chart users may use this for site-specific bootstrap manifests.
+extraManifests: []
+# Example:
+#   - https://example.com/my-manifest.yaml
+
+# Embedded Kubernetes manifests applied by Talos during cluster bootstrap.
+# Applied via cluster.inlineManifests in the Talos machine config.
+# gitopsapi populates this with: cilium, fluxinstance, sops-key,
+#   kubelet-serving-cert-approver, metrics-server, gateway-api.
+# Each entry requires a unique 'name' and the full manifest 'contents'.
+inlineManifests: []
+# Example:
+#   - name: metrics-server
+#     contents: |
+#       apiVersion: apps/v1
+#       kind: Deployment
+#       ...

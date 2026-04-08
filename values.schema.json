@@ -239,6 +239,32 @@
           "description": "Mirror configuration map. See values.yaml example."
         }
       }
+    },
+    "extraManifests": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "URL-based manifests fetched by Talos during cluster bootstrap (cluster.extraManifests). Not used by gitopsapi — gitopsapi uses inlineManifests."
+    },
+    "inlineManifests": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["name", "contents"],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Unique name identifier for this inline manifest."
+          },
+          "contents": {
+            "type": "string",
+            "minLength": 1,
+            "description": "Raw YAML of the Kubernetes manifest to embed."
+          }
+        }
+      },
+      "description": "Embedded manifests applied by Talos during cluster bootstrap (cluster.inlineManifests). gitopsapi populates this list."
     }
   }
 }
