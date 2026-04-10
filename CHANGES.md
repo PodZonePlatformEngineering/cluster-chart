@@ -15,6 +15,13 @@
 
 ## Versions
 
+### V0.1.40
+
+- `inlineManifests` — embedded YAML manifests applied by Talos during cluster bootstrap (`cluster.inlineManifests`). Each entry requires a unique `name` and full manifest `contents`. gitopsapi populates this list with: cilium, fluxinstance, sops-age, kubelet-serving-cert-approver, metrics-server, gateway-api. Direct chart users may add site-specific manifests. (CC-172)
+- `extraManifests` — URL-based manifests fetched by Talos during bootstrap (`cluster.extraManifests`). Restored for direct chart users; gitopsapi uses `inlineManifests` instead. (CC-171)
+- `values.schema.json` extended: `inlineManifests` array (items: `name` + `contents`), `extraManifests` array of strings.
+- gitopsapi default chart version updated to `0.1.40` (CC-145).
+
 ### V0.1.39
 
 Baseline type approval set:
